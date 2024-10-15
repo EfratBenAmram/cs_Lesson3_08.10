@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='utf-8' />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            function loadEvents() {
+                axios.get("https://eventsapi.onrender.com/api/Events").then((res) => {
+                    var calendarEl = document.getElementById("calendar");
+                    var calendar = new FullCalendar.Calendar(calendarEl, {
+                        initialView: "dayGridMonth",
+                        events: res.data,
+                    });
+                    calendar.render();
+                });
+            }
+
+            window.addEvent = function () {
+                const name = document.getElementById("name_event").value;
+                const startDate = document.getElementById("start_date").value;
+
+                if (!name || !startDate) {
+                    alert("Please fill in all fields.");
+                    return;
+                }
+
+                axios.post("https://eventsapi.onrender.com/api/Events", {
+                    "title": name,
+                    "start": startDate
+                }).then((res) => {
+                    loadEvents();
+                });
+                document.getElementById("add").style.visibility = "hidden";
+            };
+
+
+            window.updateEvent = function () {
+                const id = document.getElementById("update_id").value;
+                const name = document.getElementById("update_name").value;
+                const startDate = document.getElementById("update_start").value;
+
+                if (!id || !name || !startDate) {
+                    alert("Please fill in all fields.");
+                    return;
+                }
+
+                axios.put(`https://eventsapi.onrender.com/api/Events/${id}`, {
+                    "title": name,
+                    "start": startDate
+                }).then((res) => {
+                    loadEvents();
+                });
+                document.getElementById("update").style.visibility = "hidden";
+            };
+
+            window.removeEvent = function () {
+                const id = document.getElementById("remove_id").value;
+
+                if (!id) {
+                    alert("Please enter an ID to remove.");
+                    return;
+                }
+
+                axios.delete(`https://eventsapi.onrender.com/api/Events/${id}`).then((res) => {
+                    loadEvents();
+                });
+                document.getElementById("remove").style.visibility = "hidden";
+            };
+
+            loadEvents();
+        });
+
+        function toggleVisibility(id) {
+            const divs = ["add", "update", "remove"];
+            divs.forEach(div => {
+                document.getElementById(div).style.visibility = (div === id) ? "visible" : "hidden";
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div id="add" style="visibility: hidden;">
+        <label>Name</label>
+        <input type="text" id="name_event"></br>
+        <label>Start</label>
+        <input type="date" id="start_date"></br>
+        <button onclick="addEvent()">Add</button>
+    </div>
+
+    <div id="update" style="visibility: hidden;">
+        <label>ID</label>
+        <input type="number" id="update_id">
+        <label>Name</label>
+        <input type="text" id="update_name">
+        <label>Start</label>
+        <input type="date" id="update_start">
+        <button onclick="updateEvent()">Update</button>
+    </div>
+
+    <div id="remove" style="visibility: hidden;">
+        <label>ID</label>
+        <input type="number" id="remove_id">
+        <button onclick="removeEvent()">Remove</button>
+    </div>
+
+    <button onclick="toggleVisibility('add')">Add Event</button>
+    <button onclick="toggleVisibility('update')">Update Event</button>
+    <button onclick="toggleVisibility('remove')">Remove Event</button>
+    <div id='calendar'></div>
+</body>
+
+</html>
